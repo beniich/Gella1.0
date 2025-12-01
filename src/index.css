@@ -1,0 +1,59 @@
+:root {
+  --primary-color: #FFE01B;
+  --primary-hover: #E6C918;
+  --sidebar-bg: #F6F6F4;
+  --main-bg: #FFFFFF;
+  --text-main: #241C15;
+  --text-secondary: #595959;
+  --border-color: #D9D9D9;
+  --card-bg: #FFFFFF;
+  --shadow-sm: 0 2px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 0 rgba(0, 0, 0, 0.1);
+  --radius-md: 0px;
+  /* Mailchimp often uses sharper corners or specific radii, let's go with 0 or small for a brutalist/clean look, but actually they use rounded too. Let's stick to rounded but maybe less 'soft' than before. */
+  --radius-lg: 12px;
+  --font-heading: 'Fraunces', serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--main-bg);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
