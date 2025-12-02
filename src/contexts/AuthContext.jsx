@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = async () => {
         try {
-            const res = await fetch('http://localhost:3001/api/auth/me', {
+            const res = await fetch('https://gella.cloudindustrie.com/api/auth/me', {
                 credentials: 'include',
             });
             if (res.ok) {
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const login = async (email, password) => {
-        const res = await fetch('http://localhost:3001/api/auth/login', {
+        const res = await fetch('https://gella.cloudindustrie.com/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -54,7 +54,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const signup = async (username, email, password) => {
-        const res = await fetch('http://localhost:3001/api/auth/signup', {
+        const res = await fetch('https://gella.cloudindustrie.com/api/auth/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        await fetch('http://localhost:3001/api/auth/logout', {
+        await fetch('https://gella.cloudindustrie.com/api/auth/logout', {
             method: 'POST',
             credentials: 'include',
         });
