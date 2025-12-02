@@ -17,7 +17,8 @@ import {
     updateDesign,
     deleteDesign,
 } from './db.js';
-import { requireAuth, requireCredits } from './middleware/auth.js';
+import { createProduct, getAllProducts, getProductById } from './models/product.js';
+import { requireAuth, requireCredits, requireAdmin } from './middleware/auth.js';
 
 dotenv.config();
 
@@ -78,7 +79,7 @@ app.post('/api/auth/signup', async (req, res) => {
 
     try {
         // Check if user exists
-        const existingUser = findUserByEmail(email);
+        const existingUser = await findUserByEmail(email);
         if (existingUser) {
             return res.status(409).json({ error: 'Email already registered' });
         }
@@ -87,12 +88,12 @@ app.post('/api/auth/signup', async (req, res) => {
         const passwordHash = await bcrypt.hash(password, 12);
 
         // Create user
-        const userId = createUser(username, email, passwordHash);
+        const userId = await createUser(username, email, passwordHash);
 
         // Create session
         req.session.userId = userId;
 
-        const user = findUserById(userId);
+        const user = await findUserById(userId);
         res.status(201).json({
             user: {
                 id: user.id,
@@ -116,7 +117,7 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     try {
-        const user = findUserByEmail(email);
+        const user = await findUserByEmail(email);
         if (!user) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -162,6 +163,7 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
             username: req.user.username,
             email: req.user.email,
             credits: req.user.credits,
+            role: req.user.role,
         },
     });
 });
@@ -181,7 +183,7 @@ app.post('/api/credits/add', requireAuth, (req, res) => {
     }
 
     const newCredits = req.user.credits + amount;
-    updateUserCredits(req.user.id, newCredits);
+    await updateUserCredits(req.user.id, newCredits);
 
     res.json({ credits: newCredits });
 });
@@ -213,11 +215,11 @@ app.post('/api/generate', requireAuth, requireCredits(1), async (req, res) => {
         const explanation = 'Generated design based on your prompt.';
 
         // Save to database
-        const designId = createDesign(req.user.id, prompt, imageUrl, explanation);
+        const designId = await createDesign(req.user.id, prompt, imageUrl, explanation);
 
         // Deduct 1 credit
         const newCredits = req.user.credits - 1;
-        updateUserCredits(req.user.id, newCredits);
+        await updateUserCredits(req.user.id, newCredits);
 
         res.json({
             id: designId,
@@ -234,8 +236,8 @@ app.post('/api/generate', requireAuth, requireCredits(1), async (req, res) => {
 });
 
 // Get all user designs
-app.get('/api/designs', requireAuth, (req, res) => {
-    const designs = getUserDesigns(req.user.id);
+app.get('/api/designs', requireAuth, async (req, res) => {
+    const designs = await getUserDesigns(req.user.id);
     res.json(designs);
 });
 
@@ -244,7 +246,7 @@ app.put('/api/designs/:id', requireAuth, requireCredits(1), async (req, res) => 
     const { id } = req.params;
     const { prompt } = req.body;
 
-    const design = getDesignById(id);
+    const design = await getDesignById(id);
     if (!design || design.user_id !== req.user.id) {
         return res.status(404).json({ error: 'Design not found' });
     }
@@ -264,11 +266,11 @@ app.put('/api/designs/:id', requireAuth, requireCredits(1), async (req, res) => 
         const imageUrl = imageResult.data[0].url;
         const explanation = 'Design updated with new prompt.';
 
-        updateDesign(id, prompt, imageUrl, explanation);
+        await updateDesign(id, prompt, imageUrl, explanation);
 
         // Deduct 1 credit
         const newCredits = req.user.credits - 1;
-        updateUserCredits(req.user.id, newCredits);
+        await updateUserCredits(req.user.id, newCredits);
 
         res.json({
             id,
@@ -284,16 +286,42 @@ app.put('/api/designs/:id', requireAuth, requireCredits(1), async (req, res) => 
 });
 
 // Delete design
-app.delete('/api/designs/:id', requireAuth, (req, res) => {
+app.delete('/api/designs/:id', requireAuth, async (req, res) => {
     const { id } = req.params;
 
-    const design = getDesignById(id);
+    const design = await getDesignById(id);
     if (!design || design.user_id !== req.user.id) {
         return res.status(404).json({ error: 'Design not found' });
     }
 
-    deleteDesign(id);
+    await deleteDesign(id);
     res.json({ success: true });
+});
+
+// ===== MARKETPLACE ROUTES =====
+
+app.get('/api/marketplace/products', async (req, res) => {
+    const products = await getAllProducts();
+    res.json(products);
+});
+
+app.get('/api/marketplace/products/:id', async (req, res) => {
+    const product = await getProductById(req.params.id);
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    res.json(product);
+});
+
+// Create product (admin only)
+app.post('/api/marketplace/products', requireAuth, requireAdmin, async (req, res) => {
+    const { title, description, price, imageUrl } = req.body;
+    const productId = await createProduct({
+        title,
+        description,
+        price,
+        imageUrl,
+        authorId: req.user.id,
+    });
+    res.status(201).json({ id: productId });
 });
 
 app.listen(port, () => {

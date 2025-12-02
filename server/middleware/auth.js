@@ -7,7 +7,7 @@ export const requireAuth = async (req, res, next) => {
     }
 
     try {
-        const user = findUserById(req.session.userId);
+        const user = await findUserById(req.session.userId);
         if (!user) {
             req.session.destroy();
             return res.status(401).json({ error: 'User not found' });
@@ -20,6 +20,14 @@ export const requireAuth = async (req, res, next) => {
         console.error('Auth middleware error:', error);
         res.status(500).json({ error: 'Authentication error' });
     }
+};
+
+// Middleware to require admin role
+export const requireAdmin = (req, res, next) => {
+    if (req.user?.role !== 'admin') {
+        return res.status(403).json({ error: 'Admin access required' });
+    }
+    next();
 };
 
 // Optional: Middleware to check if user has enough credits
