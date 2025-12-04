@@ -1,5 +1,6 @@
 # wrangler.toml
-name = 'gella'
+# wrangler.toml
+name = 'gella-worker'
 compatibility_date = "2025-12-01"
 
 [assets]
